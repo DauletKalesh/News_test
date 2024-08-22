@@ -1,5 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models.signals import post_save, post_delete
+from django.core.cache import cache
+from django.dispatch import receiver
 from django.utils.text import slugify
 import random
 import string
@@ -35,3 +38,13 @@ class News(models.Model):
         if not self.slug:
             self.slug = slugify(self.title) + '-' + ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
         super().save(*args, **kwargs)
+
+
+@receiver(post_save, sender=News)
+@receiver(post_delete, sender=News)
+@receiver(post_save, sender=Category)
+@receiver(post_delete, sender=Category)
+@receiver(post_save, sender=Tag)
+@receiver(post_delete, sender=Tag)
+def clear_cache(sender, **kwargs):
+    cache.clear()
