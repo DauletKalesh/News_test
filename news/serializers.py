@@ -19,6 +19,16 @@ class NewsSerializer(serializers.ModelSerializer):
     class Meta:
         model = News
         fields = '__all__'
+    
+    def __init__(self, *args, **kwargs):
+        context = kwargs.get('context', {})
+        request = context.get('request', None)
+
+        super(NewsSerializer, self).__init__(*args, **kwargs)
+
+        # to include "url" only while searching
+        if request and request.query_params.get('search'):
+            self.fields['url'] = serializers.HyperlinkedIdentityField(view_name='news-detail', lookup_field='pk')
 
 class UserNewsSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
@@ -27,3 +37,13 @@ class UserNewsSerializer(serializers.ModelSerializer):
     class Meta:
         model = News
         exclude = ('is_published', 'author', 'last_modified_date',)
+
+    def __init__(self, *args, **kwargs):
+        context = kwargs.get('context', {})
+        request = context.get('request', None)
+
+        super(UserNewsSerializer, self).__init__(*args, **kwargs)
+
+        # to include "url" only while searching
+        if request and request.query_params.get('search'):
+            self.fields['url'] = serializers.HyperlinkedIdentityField(view_name='news-detail', lookup_field='pk')

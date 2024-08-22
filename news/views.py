@@ -8,6 +8,7 @@ class NewsViewSet(viewsets.ModelViewSet):
     queryset = News.objects.all()
     serializer_class = NewsSerializer
     filter_backends = [filters.SearchFilter]
+    # without prefix (search for containing words)
     search_fields = ['title', 'content', 'tags__name', 'category__name']
 
     def get_permissions(self):
