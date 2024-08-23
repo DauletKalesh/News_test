@@ -1,0 +1,52 @@
+version: '3'
+
+services:
+  db:
+    image: postgres
+    environment:
+      POSTGRES_DB: news_db
+      POSTGRES_USER: db_admin_user
+      POSTGRES_PASSWORD: admin_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init_db:/docker-entrypoint-initdb.d/
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
+
+  user_app:
+    build:
+      context: .
+      dockerfile: Dockerfile.user
+    command: gunicorn news_project.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8001:8000"
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DATABASE_URL=postgres://db_user:user_password@db:5432/postgres_db
+
+  admin_app:
+    build:
+      context: .
+      dockerfile: Dockerfile.admin
+    command: gunicorn news_project.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8002:8000"
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DATABASE_URL=postgres://db_admin_user:admin_password@db:5432/postgres_db
+
+volumes:
+  postgres_data:
